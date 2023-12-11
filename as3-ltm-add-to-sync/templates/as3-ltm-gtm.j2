@@ -1,0 +1,79 @@
+{
+    "class": "ADC",
+    "schemaVersion": "3.37.0",
+    "id": "GSLB_Sample",
+    "Common": {
+        "class": "Tenant",
+        "Shared": {
+            "class": "Application",
+            "template": "shared",
+            {% for dc in datacenter_list %}"{{ dc }}": {
+                "class": "GSLB_Data_Center"
+            },{% endfor %}
+            {% for server in groups['gtms'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {
+                        "address": "{{ hostvars[server]['internal_self'] | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ hostvars[server]['inventory_hostname_short'] }}"
+                    }
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled"
+            },{% endfor %}
+            {% for server in groups['ltms_primary_only'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {% for peer in hostvars[server]['self_and_peer_info'] %}
+                    {
+                        "address": "{{ peer.iquery_ip | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ peer.name }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled"
+            },{% endfor %}
+            {% for server in groups['ltm_standalone_only'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {% for peer in hostvars[server]['self_and_peer_info'] %}
+                    {
+                        "address": "{{ peer.iquery_ip | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ peer.name }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled"
+            },{% endfor %}
+        }
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "command": "run",
+			"options": [
+        {
+            "ssh-password": "{{ ansible_httpapi_password }}",
+            "{{ ansible_user }}@{{ hostvars[ltm]['internal_self'] | ansible.utils.ipaddr('address') }}": ""
+        }
+    ]
+}

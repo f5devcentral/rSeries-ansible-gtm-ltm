@@ -1,0 +1,74 @@
+{
+    "class": "ADC",
+    "schemaVersion": "3.37.0",
+    "id": "GSLB_Sample",
+    "Common": {
+        "class": "Tenant",
+        "Shared": {
+            "class": "Application",
+            "template": "shared",
+            {% for dc in datacenter_list %}"{{ dc }}": {
+                "class": "GSLB_Data_Center"
+            },{% endfor %}
+            {% for server in groups['gtms'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {
+                        "address": "{{ hostvars[server]['internal_self'] | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ hostvars[server]['inventory_hostname_short'] }}"
+                    }
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled"
+            },{% endfor %}
+        }
+    },
+    "dns_gslb_listener": {
+        "class": "Tenant",
+        "Application": {
+            "class": "Application",
+            "service": {
+                "class": "Service_UDP",
+                "virtualPort": 80,
+                "virtualAddresses": [
+                    "{{ internal_self | ansible.utils.ipaddr('address') }}"
+                ],
+                "profileUDP": {
+                    "use": "profileUdp"
+                },
+                "profileDNS": {
+                    "use": "profileDnsHW"
+                }
+            },
+            "profileUdp": {
+                "class": "UDP_Profile",
+                "datagramLoadBalancing": true
+            },
+            "profileDnsHW": {
+                "class": "DNS_Profile",
+                "label": "profileDnsHW",
+                "remark": "DNS Profile test",
+                "parentProfile": {
+                    "bigip": "/Common/dns"
+                },
+                "globalServerLoadBalancingEnabled": true,
+                "dnsExpressEnabled": false,
+                "cacheEnabled": false,
+                "unhandledQueryAction": "drop",
+                "localBindServerEnabled": false,
+                "zoneTransferEnabled": false,
+                "recursionDesiredEnabled": false,
+                "securityEnabled": true
+            }
+        }
+    }
+}

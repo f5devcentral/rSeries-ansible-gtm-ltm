@@ -1,0 +1,183 @@
+---
+
+datacenters:
+  children:
+    slo_dc:
+    glo_dc:
+
+gtms:
+  children:
+    gtms1:
+    gtms2:
+
+gtm_sync_group_primary:
+  # There MUST be only one GTM device defined here:
+  # It is the source-of-truth for the sync-group.
+  hosts:
+    gtm21.f5.com
+
+ltms:
+  children:
+    ltm_standalone_only:
+    ltms_primary_only:
+    ltms_secondary_only:
+
+ltm_standalone_only:
+  hosts:
+    # ltm30.f5.com
+
+ltms_primary_only:
+  hosts:
+    ltm21.f5.com
+
+ltms_secondary_only:
+  hosts:
+    ltm22.f5.com
+
+all:
+  children:
+    slo_dc:
+      children:
+        r59001:
+          # children:
+          #   gtms1:
+          #     hosts:
+          #       gtm11.f5.com:
+          #         gtm_sync_group_primary: false
+          #       gtm12.f5.com:
+          #         gtm_sync_group_primary: false
+          #   ltms1:
+          #     hosts:
+          #       ltm11.f5.com:
+          #       ltm12.f5.com:
+          # vars:
+          #   # vars for r59001
+          #   f5os_ip: 10.0.107.18
+          #   route_cidr: 10.0.0.0/16
+          #   gateway: 10.0.2.1
+      vars:
+        # vars for slo_dc
+        dc: slo_dc
+    glo_dc:
+      children:
+        r59002:
+          children:
+            gtms2:
+              hosts:
+                gtm21.f5.com:
+                  ansible_host: 10.0.107.56
+                  external_self: 10.0.1.101/24
+                  internal_self: 10.0.2.101/24
+                  # sync_self_address: 10.0.2.101
+                  device_cert: gtm-cert-1.crt
+                  device_key: gtm-cert-1.key
+                  gtm_sync_group_primary: true
+                  dns_enable: true
+                  waf_enable: false
+                  ltm_ha_enable: false
+                  state: deployed
+                gtm22.f5.com:
+                  ansible_host: 10.0.107.57
+                  external_self: 10.0.1.102/24
+                  internal_self: 10.0.2.102/24
+                  # sync_self_address: 10.0.2.102
+                  device_cert: gtm-cert-2.crt
+                  device_key: gtm-cert-2.key
+                  gtm_sync_group_primary: false
+                  dns_enable: true
+                  waf_enable: false
+                  ltm_ha_enable: false
+                  state: deployed
+            ltms2:
+              hosts:
+                ltm21.f5.com:
+                  ansible_host: 10.0.107.58
+                  external_self: 10.0.1.103/24
+                  internal_self: 10.0.2.103/24
+                  self_and_peer_info:
+                    - name: ltm21
+                      iquery_ip: 10.0.2.103/24
+                    - name: ltm22
+                      iquery_ip: 10.0.2.104/24
+                  device_cert: ltm-cert-1.crt
+                  device_key: ltm-cert-1.key
+                  dns_enable: false
+                  waf_enable: false
+                  ltm_ha_enable: true
+                  ltm_ha_primary: true
+                  state: deployed
+                ltm22.f5.com:
+                  ansible_host: 10.0.107.59
+                  external_self: 10.0.1.104/24
+                  internal_self: 10.0.2.104/24
+                  self_and_peer_info:
+                    - name: ltm21
+                      iquery_ip: 10.0.2.103/24
+                    - name: ltm22
+                      iquery_ip: 10.0.2.104/24
+                  device_cert: ltm-cert-2.crt
+                  device_key: ltm-cert-2.key
+                  dns_enable: false
+                  waf_enable: false
+                  ltm_ha_enable: true
+                  ltm_ha_primary: false
+                  state: deployed
+                # ltm30.f5.com:
+                #   ansible_host: 10.0.107.59
+                #   external_self: 10.0.1.106/24
+                #   internal_self: 10.0.2.106/24
+                #   ltm_ha_primary: false
+                #   self_and_peer_info:
+                #     - name: ltm30
+                #       iquery_ip: 10.0.2.106/24
+                #   device_cert: ltm-cert-2.crt
+                #   device_key: ltm-cert-2.key
+                #   dns_enable: false
+                #   waf_enable: false
+                #   ltm_ha_enable: false
+                #   ltm_ha_primary: false
+                #   state: configured
+          vars:
+            # vars for r59002
+            f5os_ip: 10.0.107.19
+            route_cidr: 10.0.0.0/16
+            gateway: 10.0.2.1
+      vars:
+        # vars for glo_dc
+        dc: glo_dc
+  vars:
+    # vars for all hosts
+    ansible_user: admin
+    ansible_httpapi_password: password
+    ansible_httpapi_port: 443
+    ansible_network_os: f5networks.f5os.f5os
+    ansible_httpapi_use_ssl: yes
+    ansible_httpapi_validate_certs: no
+    provider:
+      server: "{{ ansible_host }}"
+      user: "{{ ansible_user }}"
+      password: "{{ ansible_httpapi_password }}"
+      validate_certs: "{{ ansible_httpapi_validate_certs }}"
+      server_port: "{{ ansible_httpapi_port }}"
+    new_root_password: new_password
+    ansible_command_timeout: 1800
+    image_name: BIGIP-17.1.0-0.0.16.T4-F5OS.qcow2.zip.bundle
+    nodes: 1
+    mgmt_gw: 10.0.107.254
+    mem: 7680
+    cpu: 2
+    vlans: [3209, 3030]
+#     host_admin_pass: admin
+#     host_root_pass: password
+#     tenant_user: cec
+#     tenant_password: tenant_password
+    dns_sync_group: arch-sync-group
+    dns_server: 8.8.8.8
+    ntp_server: time.google.com
+    datacenter_list: 
+      - slo_dc
+      - glo_dc
+    gtm_server_primary:
+      name: gtm21
+      hostname: gtm21.f5.com
+      sync_self_address: 10.0.2.101

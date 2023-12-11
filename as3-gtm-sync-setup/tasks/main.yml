@@ -1,0 +1,97 @@
+---
+
+- name: If it doesn't exist, create the AS3 local file  
+  file:
+    path: "{{ role_path }}/files/as3-rendered-{{ inventory_hostname_short }}.json"
+    state: touch
+  tags:
+    - debug
+
+
+- name: Write the rendered AS3 declaration to file, for debug/review
+  copy:
+    content: "{{ lookup('template', '{{ role_path }}/templates/as3-gtm.j2', split_lines=False) | to_nice_json }}"
+    dest: "{{ role_path }}/files/as3-rendered-{{ inventory_hostname_short }}.json"
+  tags:
+    - debug
+
+
+- name: Deploy AS3 GTM/DNS declaration
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/shared/appsvcs/declare?async=true"
+    method: POST
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    body: "{{ lookup('template', '{{ role_path }}/templates/as3-gtm.j2', split_lines=False) | to_nice_json }}"
+    status_code: 202
+    timeout: 300
+    body_format: json
+    return_content: true
+  delegate_to: localhost
+  register: as3_deploy
+  tags:
+    - gtm
+
+
+- name: Debug AS3 GTM/DNS deployment status link (used by the following task)
+  debug:
+    msg: "{{ as3_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
+  tags: 
+    - debug
+
+
+- name: AS3 GTM/DNS deployment status (max 1200)
+  uri:
+    url: "{{ as3_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
+    method: GET
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  retries: 30
+  delay: 10
+  delegate_to: localhost
+  register: as3_result
+  # 
+  until:  as3_result.json.results | selectattr('code', '==', 200) | list | length == as3_result.json.results | length
+  tags: 
+    - gtm
+
+
+- name: Debug AS3 GTM/DNS deployment status result
+  debug:
+    msg: "{{ as3_result }}"
+  tags: 
+    - debug
+
+
+- name: Run gtm_add command on the primary gtm only (to add all other gtms in the sync-group)
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/tm/gtm/gtm_add"
+    method: POST
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    body: "{{ lookup('template', '{{ role_path }}/templates/gtm_add_body.j2', split_lines=False) | to_nice_json }}"
+    status_code: 200
+    timeout: 300
+    body_format: json
+    return_content: true
+  delegate_to: localhost
+  register: gtm_add_response
+  when: not gtm_sync_group_primary
+  tags:
+    - gtm  
+
+
+- name: Debug gtm_add command status response
+  debug:
+    msg: "{{ gtm_add_response }}"
+  tags: 
+    - debug

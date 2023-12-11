@@ -1,0 +1,84 @@
+{ 
+    "schemaVersion": "1.41.0",
+    "class": "Device",
+    "async": true,
+    "label": "my BIG-IP declaration for declarative onboarding",
+    "Common": {
+        "class": "Tenant",
+        "hostname": "{{ inventory_hostname }}",
+        "myProvisioning": {
+            "class": "Provision",
+            "ltm": "nominal",
+            "gtm": "nominal"
+        },
+        "dbvars": {
+            "class": "DbVariables",
+            "provision.extramb": 1000
+        },
+        "admin": {
+            "class": "User",
+            "userType": "regular",
+            "password": "{{ ansible_httpapi_password }}",
+            "shell": "bash"
+        },{% if do_first_run %}
+        "root": {
+            "class": "User",
+            "userType": "root",
+            "oldPassword": "{{ ansible_httpapi_password }}",
+            "newPassword": "{{ new_root_password }}"
+        },{% endif %}
+        "deviceCertificate": {
+            "class": "DeviceCertificate",
+            "certificate": {
+                "base64": "{{ cert_data.content }}"
+            },
+            "privateKey": {
+                "base64": "{{ key_data.content }}"
+            },
+            "updateTrustCerts": true
+        },                    
+        "myDns": {
+            "class": "DNS",
+            "nameServers": [
+            "{{ dns_server }}"
+            ],
+            "search": [
+                "f5.com",
+                "test.com"
+            ]
+        },
+        "myNtp": {
+            "class": "NTP",
+            "servers": [
+                "{{ ntp_server }}"
+            ],
+            "timezone": "UTC"
+        },
+        "internal-self": {
+            "class": "SelfIp",
+            "address": "{{ internal_self }}",
+            "vlan": "vlan_3209",
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "external-self": {
+            "class": "SelfIp",
+            "address": "{{ external_self }}",
+            "vlan": "vlan_3030",
+            "allowService": "none",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "localRoute": {
+            "class": "Route",
+            "network": "{{ route_cidr }}",
+            "gw": "{{ gateway }}"
+        },
+        "GSLBGlobals": {
+            "class": "GSLBGlobals",
+            "general": {
+                "synchronizationEnabled": true,
+                "synchronizationGroupName": "{{ dns_sync_group }}"
+            }
+        }
+    }
+}

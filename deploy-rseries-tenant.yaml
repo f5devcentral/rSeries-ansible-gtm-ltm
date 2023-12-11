@@ -1,0 +1,75 @@
+---
+#------------------------------------------------------------------------------
+# Playbook to DEPLOY rSeries Tenants. 
+#
+#  Requires [
+#    rpm installed
+#    on MacOS: 'export OBJC_DISABLE_INITIALIZE_FORK_SAFETY="YES"'
+#  ]
+#------------------------------------------------------------------------------
+
+- name: Deploy tenant on rSeries hardware 
+  hosts: gtms2:ltms2
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+  any_errors_fatal: true
+  # Serial ensures that Ansible does not try to create multiple Tenants on the same hardware platform at the same time.
+  serial: 1
+  roles:
+    # Create the tenant on rSeries 
+    - role: deploy-tenant
+
+- name: Install ATC packages
+  hosts: gtms2:ltms2
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+    - f5networks.f5_modules
+  any_errors_fatal: true
+  # Use serial to restricy to one device at a time for debug.
+  serial: 1
+  roles:
+    - role: atc-install
+
+- name: Declarative Onboarding
+  hosts: gtms2:ltms2
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+    - f5networks.f5_modules
+  any_errors_fatal: true
+  # Use serial to restricy to one device at a time for debug.
+  serial: 1
+  roles:
+    - role: declarative-onboarding
+
+
+- name: Configure GTM Sync-Group
+  hosts: gtms2:ltms2
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+    - f5networks.f5_modules
+  any_errors_fatal: true
+  # Use serial to restricy to one device at a time for debug.
+  # serial: 1
+  roles:
+    - role: as3-gtm-sync-setup
+
+- name: Add LTMs to Sync Group
+  hosts: gtms2
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+    - f5networks.f5_modules
+  any_errors_fatal: true
+  # Use serial to restricy to one device at a time for debug.
+  serial: 1
+  roles:
+    - role: as3-ltm-add-to-sync

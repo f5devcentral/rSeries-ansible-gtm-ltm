@@ -1,0 +1,55 @@
+---
+
+- name: Create rSeries Tenant
+  delegate_to: "{{ f5os_ip }}"
+  f5os_tenant:
+    name: "{{ inventory_hostname_short }}"
+    image_name: "{{ image_name }}"
+    nodes: "{{ nodes }}"
+    mgmt_ip: "{{ ansible_host }}"
+    mgmt_prefix: 24
+    mgmt_gateway: "{{ mgmt_gw }}"
+    vlans: "{{ vlans }}"
+    cpu_cores: "{{ cpu }}"
+    memory: "{{ mem }}"
+    running_state: "{{ state }}"
+  tags: 
+    - ltm
+    - gtm
+
+- name: Wait for correct rSeries tenant state
+  delegate_to: "{{ f5os_ip }}"
+  f5os_tenant_wait:
+    name: "{{ inventory_hostname_short }}"
+    state: "{{ state }}"
+    timeout: 600
+  tags: 
+    - ltm
+    - gtm
+
+- name: Change default admin password on first boot (USUALLY TAKES ABOUT 90 SECONDS)
+  ansible.builtin.uri:
+    url: "https://admin:admin@{{ ansible_host }}/mgmt/shared/authz/users/admin"
+    method: PATCH
+    body: "{ \"oldPassword\": \"admin\", \"password\": \"{{ ansible_httpapi_password }}\"}"
+    body_format: json
+    force_basic_auth: yes
+    status_code: 
+      - 200
+      - 401
+    validate_certs: no
+  register: change_admin_response
+  delay: 5
+  retries: 60
+  # If status is 401, assuming that the password has already been changed in previous run, so ignoring.
+  until: ('status' in change_admin_response and (change_admin_response.status == 200 or change_admin_response.status == 401 ))
+  tags: 
+    - ltm
+    - gtm
+
+
+- name: Debug admin password change response
+  debug:
+    msg: "{{ change_admin_response | to_nice_json }}"
+  tags: 
+    - debug

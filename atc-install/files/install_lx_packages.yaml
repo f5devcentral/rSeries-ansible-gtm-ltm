@@ -1,0 +1,108 @@
+---
+## This Task file is supposed to be called like this:
+# - name: install lx packages
+#   vars:
+#     lx_package_base_path: "{{ role_path }}/files"
+#     #lx_install_timeout: 300  # optional timeout
+#     provider: "{{my_f5bigip_provider}}"
+#
+#   ansible.builtin.include_tasks:
+#     file: install_lx_packages.yaml
+#     apply:
+#       tags: always  # magic always tag to run every task within included yaml
+#   loop:
+#     - f5-appsvcs-3.41.0-1.noarch.rpm
+#     - f5-appsvcs-templates-1.22.0-1.noarch.rpm
+#   loop_control:
+#     loop_var: lx_package
+#   tags:
+#     - lx-package-install
+
+- name: "Set LX Package endpoints : {{ lx_package }}"
+  ansible.builtin.set_fact:
+    # set depenencies for lx packages
+    __lx_package_dependencies:
+      fast: appsvcs
+    # determine API endpoint for known LX packages, order matters!
+    __lx_package_endpoint: >-
+      {%- if lx_package.startswith('f5-appsvcs-templates') -%}
+      fast
+      {%- elif lx_package.startswith('f5-appsvcs') -%}
+      appsvcs
+      {%- elif lx_package.startswith('f5-telemetry') -%}
+      telemetry
+      {%- elif lx_package.startswith('f5-cloud-failover') -%}
+      cloud-failover
+      {%- elif lx_package.startswith('f5-declarative-onboarding') -%}
+      declarative-onboarding
+      {%- endif -%}
+
+- name: "Set LX Package dependencies : {{ lx_package }}"
+  ansible.builtin.set_fact:
+    # set API endpoint of required LX package to proceed
+    __lx_package_dependency_endpoint: "{{ __lx_package_dependencies.get(__lx_package_endpoint) }}"
+
+# REPEAT RUN OF PLAYBOOK NEEDS TO CHECK THAT RPMs ARE NOT ALREADY INSTALLED, OR ELSE THEY WILL FAIL
+
+- name: "Check LX Package dependencies are installed and ready : {{ lx_package }}"
+  delegate_to: localhost
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/shared/{{ __lx_package_dependency_endpoint }}/info"
+    method: GET
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    status_code: [200]
+    return_content: true
+  delay: 5
+  retries: "{{ (lx_install_timeout | default(300) / 5) | int }}"
+  register: __bigip_lx_package_status
+  # only run this when we have a dependency
+  when: __lx_package_dependency_endpoint
+  # wait till API endpoint is registered and we receive a version of the lx package
+  until: (__bigip_lx_package_status.status == 200) and (__bigip_lx_package_status.json.version is defined)
+
+- name: "Install LX Package : {{ lx_package }}"
+  connection: httpapi
+  vars:
+    # ansible_host: "{{ ansible_host }}"
+    # ansible_user: "{{ ansible_user }}"
+    # ansible_httpapi_password: "{{ ansible_httpapi_password }}"
+    # ansible_httpapi_port: "{{ ansible_httpapi_port | default(443) }}"
+    # ansible_network_os: f5networks.f5_bigip.bigip
+    # ansible_httpapi_use_ssl: true
+    # ansible_httpapi_validate_certs: "{{ ansible_httpapi_validate_certs | default(yes) }}"
+  f5networks.f5_modules.bigip_lx_package:
+    provider: "{{ provider }}"
+    package: '{{ lx_package_base_path }}/{{ lx_package }}'
+    state: present
+  throttle: 1
+  delay: 60
+  retries: 5
+
+
+- name: "Wait for LX Package installation to complete : {{ lx_package }}"
+  delegate_to: localhost
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/shared/{{ __lx_package_endpoint }}/info"
+    method: GET
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    status_code: [200]
+    return_content: true
+  delay: 5
+  retries: "{{ (lx_install_timeout | default(300) / 5) | int }}"
+  ignore_errors: true
+  # retries: "{{ (lx_install_timeout | default(300) / 5) | int }}"
+  register: __bigip_lx_package_status
+  # wait till API endpoint is registered and we receive a version of installed lx package
+  until: (__bigip_lx_package_status.status == 200) and ((__bigip_lx_package_status.json.version is defined) or (__bigip_lx_package_status.json[0].version is defined))
+
+
+- name: Debug package install status
+  debug:
+    msg: "{{ __bigip_lx_package_status }}"
+  tags: debug

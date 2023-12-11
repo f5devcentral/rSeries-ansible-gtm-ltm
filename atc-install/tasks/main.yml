@@ -1,0 +1,18 @@
+---
+- name: Install LX packages
+  vars:
+    lx_package_base_path: "{{ role_path }}/files"
+    #lx_install_timeout: 300  # optional timeout
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/files/install_lx_packages.yaml"
+    apply:
+      tags: always  # magic always tag to run every task within included yaml
+  loop:
+    - f5-appsvcs-3.48.0-10.noarch.rpm
+    - f5-declarative-onboarding-1.41.0-8.noarch.rpm
+  loop_control:
+    loop_var: lx_package
+  # tags:
+  #   - lx-package-install
+  #   - ltm
+  #   - gtm

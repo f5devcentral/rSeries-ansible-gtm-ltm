@@ -1,0 +1,130 @@
+---
+
+- name: Check if Declarative Onbaording Declaration already exists on BIGIP
+  # If a declartion already exists, we cannot change the root password a second time.
+  # So we set a vriable that will remove the root block from the do-gtm.j2 template.
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/shared/declarative-onboarding"
+    method: GET
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    status_code: 200
+    timeout: 300
+    return_content: true
+  delegate_to: localhost
+  ignore_errors: true
+  register: do_install_status
+  tags: 
+    - ltm
+    - gtm
+    - always
+
+
+- name: Debug output do_install_status
+  debug:
+    msg: "{{ do_install_status | to_nice_json }}"
+  tags: 
+    - debug
+
+
+- name: Set fact if do_install_status detects that Declarative Onboarding has been run previously 
+  # If a declartion already exists, we cannot change the root password a second time.
+  # So we set a vriable that will remove the 'root' json object from the do-gtm.j2 template.
+  ansible.builtin.set_fact:
+    do_first_run: "{{ false if (do_install_status.status == 200 and do_install_status.json.declaration.Common is defined) else true }}"
+  tags: 
+    - ltm
+    - gtm
+
+
+- name: Import device TLS certificates from file
+  slurp:
+    src: "{{ role_path }}/files/device-certs/{{ device_cert }}"
+  register: cert_data
+  tags: 
+    - ltm
+    - gtm
+
+
+- name: Import device TLS keys from file
+  slurp:
+    src: "{{ role_path }}/files/device-certs/{{ device_key }}"
+  register: key_data
+  tags: 
+    - ltm
+    - gtm
+
+
+- name: Debug output the rendered Declarative Onboarding declaration
+  debug:
+    msg: "{{ lookup('template', './templates/do-gtm-ltm-combined.j2', split_lines=False) | to_nice_json }}"
+  tags: 
+    - debug
+
+
+- name: If it doesn't exist, create the DO local file  
+  file:
+    path: "{{ role_path }}/files/do-rendered-{{ inventory_hostname_short }}.json"
+    state: touch
+  tags:
+    - debug
+
+
+- name: Write the rendered DO declaration to file, for debug/review
+  copy:
+    content: "{{ lookup('template', '{{ role_path }}/templates/do-gtm-ltm-combined.j2', split_lines=False) | to_nice_json }}"
+    dest: "{{ role_path }}/files/do-rendered-{{ inventory_hostname_short }}.json"
+  tags:
+    - debug
+
+
+- name: Deploy Declarative Onboarding declartion
+  vars:
+    template_base_path: "{{ role_path }}/templates"
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/shared/declarative-onboarding"
+    method: POST
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    body: "{{ lookup('template', './templates/do-gtm-ltm-combined.j2', split_lines=False) | to_nice_json }}"
+    status_code: 202
+    timeout: 300
+    body_format: json
+    return_content: true
+  delegate_to: localhost
+  register: do_deploy
+  tags: 
+    - ltm
+    - gtm
+
+- name: Debug Declarative Onboarding deployment status link (used by the following task)
+  debug:
+    msg: "{{ do_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
+  tags: 
+    - debug
+
+
+- name: Declarative Onboarding deployment status (max 1200)
+  uri:
+    url: "{{ do_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
+    method: GET
+    url_username: "{{ ansible_user }}"
+    url_password: "{{ ansible_httpapi_password }}"
+    validate_certs: "{{ ansible_httpapi_validate_certs }}"
+    force_basic_auth: true
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  retries: 360
+  delay: 10
+  ignore_errors: true
+  delegate_to: localhost
+  register: result
+  until: ('status' in result) and (result.status == 200)
+  tags: 
+    - ltm
+    - gtm
