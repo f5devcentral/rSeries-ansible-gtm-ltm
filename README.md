@@ -1,5 +1,7 @@
 # r-series-ansible-gtm-ltm
 
+## IMPORTANT NOTE: Declarative Onboarding is not yet working for LTM HA.  GTM is working correctly.  Just remove LTMs from the inventory file.
+
 To run playbook, first create `inventory` file, based on the structure shown in `inventory.example`.  Then use the command:
 - `ansible-playbook -i inventory deploy-rseries-tenant.yaml`
 
