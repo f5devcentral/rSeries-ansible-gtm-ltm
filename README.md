@@ -1,5 +1,8 @@
 # r-series-ansible-gtm-ltm
 
+To run playbook, first create `inventory` file, based on the structure shown in `inventory.example`.  Then use the command:
+- `ansible-playbook -i inventory deploy-rseries-tenant.yaml`
+
 
 `rpm` command must be avialable on the Ansible host.  It's included in Linux, but not MacOS
 
