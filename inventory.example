@@ -14,7 +14,7 @@ gtm_sync_group_primary:
   # There MUST be only one GTM device defined here:
   # It is the source-of-truth for the sync-group.
   hosts:
-    gtm21.f5.com
+    gtm1.f5.com
 
 ltms:
   children:
@@ -24,47 +24,25 @@ ltms:
 
 ltm_standalone_only:
   hosts:
-    # ltm30.f5.com
+    # ltm3.f5.com
 
 ltms_primary_only:
   hosts:
-    ltm21.f5.com
+    ltm1.f5.com
 
 ltms_secondary_only:
   hosts:
-    ltm22.f5.com
+    ltm2.f5.com
 
 all:
   children:
     slo_dc:
       children:
         r59001:
-          # children:
-          #   gtms1:
-          #     hosts:
-          #       gtm11.f5.com:
-          #         gtm_sync_group_primary: false
-          #       gtm12.f5.com:
-          #         gtm_sync_group_primary: false
-          #   ltms1:
-          #     hosts:
-          #       ltm11.f5.com:
-          #       ltm12.f5.com:
-          # vars:
-          #   # vars for r59001
-          #   f5os_ip: 10.0.107.18
-          #   route_cidr: 10.0.0.0/16
-          #   gateway: 10.0.2.1
-      vars:
-        # vars for slo_dc
-        dc: slo_dc
-    glo_dc:
-      children:
-        r59002:
           children:
-            gtms2:
+            gtms1:
               hosts:
-                gtm21.f5.com:
+                gtm1.f5.com:
                   ansible_host: 10.0.107.56
                   external_self: 10.0.1.101/24
                   internal_self: 10.0.2.101/24
@@ -76,7 +54,38 @@ all:
                   waf_enable: false
                   ltm_ha_enable: false
                   state: deployed
-                gtm22.f5.com:
+            ltms1:
+              hosts:
+                ltm1.f5.com:
+                  ansible_host: 10.0.107.58
+                  external_self: 10.0.1.103/24
+                  internal_self: 10.0.2.103/24
+                  self_and_peer_info:
+                    - name: ltm1
+                      iquery_ip: 10.0.2.103/24
+                    - name: ltm2
+                      iquery_ip: 10.0.2.104/24
+                  device_cert: ltm-cert-1.crt
+                  device_key: ltm-cert-1.key
+                  dns_enable: false
+                  waf_enable: false
+                  ltm_ha_enable: true
+                  ltm_ha_primary: true
+                  state: deployed
+          vars:
+            # vars for r59001
+            f5os_ip: 10.0.107.18
+            route_cidr: 10.0.0.0/16
+            gateway: 10.0.2.1
+      vars:
+        # vars for slo_dc
+        dc: slo_dc
+    glo_dc:
+      children:
+        r59002:
+          children:
+            gtms2:
+                gtm2.f5.com:
                   ansible_host: 10.0.107.57
                   external_self: 10.0.1.102/24
                   internal_self: 10.0.2.102/24
@@ -90,30 +99,14 @@ all:
                   state: deployed
             ltms2:
               hosts:
-                ltm21.f5.com:
-                  ansible_host: 10.0.107.58
-                  external_self: 10.0.1.103/24
-                  internal_self: 10.0.2.103/24
-                  self_and_peer_info:
-                    - name: ltm21
-                      iquery_ip: 10.0.2.103/24
-                    - name: ltm22
-                      iquery_ip: 10.0.2.104/24
-                  device_cert: ltm-cert-1.crt
-                  device_key: ltm-cert-1.key
-                  dns_enable: false
-                  waf_enable: false
-                  ltm_ha_enable: true
-                  ltm_ha_primary: true
-                  state: deployed
-                ltm22.f5.com:
+                ltm2.f5.com:
                   ansible_host: 10.0.107.59
                   external_self: 10.0.1.104/24
                   internal_self: 10.0.2.104/24
                   self_and_peer_info:
-                    - name: ltm21
+                    - name: ltm1
                       iquery_ip: 10.0.2.103/24
-                    - name: ltm22
+                    - name: ltm2
                       iquery_ip: 10.0.2.104/24
                   device_cert: ltm-cert-2.crt
                   device_key: ltm-cert-2.key
@@ -122,7 +115,7 @@ all:
                   ltm_ha_enable: true
                   ltm_ha_primary: false
                   state: deployed
-                # ltm30.f5.com:
+                # ltm31.f5.com:
                 #   ansible_host: 10.0.107.59
                 #   external_self: 10.0.1.106/24
                 #   internal_self: 10.0.2.106/24
@@ -178,6 +171,6 @@ all:
       - slo_dc
       - glo_dc
     gtm_server_primary:
-      name: gtm21
-      hostname: gtm21.f5.com
+      name: gtm1
+      hostname: gtm1.f5.com
       sync_self_address: 10.0.2.101

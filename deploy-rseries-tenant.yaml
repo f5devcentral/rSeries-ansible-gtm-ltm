@@ -9,7 +9,7 @@
 #------------------------------------------------------------------------------
 
 - name: Deploy tenant on rSeries hardware 
-  hosts: gtms2:ltms2
+  hosts: gtms:ltms
   gather_facts: no
   connection: httpapi
   collections:
@@ -22,7 +22,7 @@
     - role: deploy-tenant
 
 - name: Install ATC packages
-  hosts: gtms2:ltms2
+  hosts: gtms:ltms
   gather_facts: no
   connection: httpapi
   collections:
@@ -35,7 +35,7 @@
     - role: atc-install
 
 - name: Declarative Onboarding
-  hosts: gtms2:ltms2
+  hosts: gtms:ltms
   gather_facts: no
   connection: httpapi
   collections:
@@ -49,7 +49,7 @@
 
 
 - name: Configure GTM Sync-Group
-  hosts: gtms2:ltms2
+  hosts: gtms
   gather_facts: no
   connection: httpapi
   collections:
@@ -62,7 +62,7 @@
     - role: as3-gtm-sync-setup
 
 - name: Add LTMs to Sync Group
-  hosts: gtms2
+  hosts: gtms
   gather_facts: no
   connection: httpapi
   collections:

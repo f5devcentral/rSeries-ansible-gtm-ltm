@@ -83,6 +83,7 @@
 - name: Deploy Declarative Onboarding declartion
   vars:
     template_base_path: "{{ role_path }}/templates"
+    # ltm_ha_enable: false
   ansible.builtin.uri:
     url: "https://{{ ansible_host }}:{{ ansible_httpapi_port | default(443) }}/mgmt/shared/declarative-onboarding"
     method: POST
@@ -128,3 +129,4 @@
   tags: 
     - ltm
     - gtm
+
