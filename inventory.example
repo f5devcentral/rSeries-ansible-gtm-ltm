@@ -71,6 +71,51 @@ all:
                   waf_enable: false
                   ltm_ha_enable: true
                   ltm_ha_primary: true
+                  tenants:
+                    - name: tenant1
+                      app_list:
+                        - name: nginxServicemainA
+                          ip: 10.0.1.203
+                          port: 80
+                          members:
+                            - name: server11
+                              ip: 10.0.1.11
+                            - name: server12
+                              ip: 10.0.1.12
+                            - name: server13
+                              ip: 10.0.1.13
+                        - name: nginxServicemainB
+                          ip: 10.0.11.203
+                          port: 80
+                          members: 
+                            - name: server111
+                              ip: 10.0.11.11
+                            - name: server112
+                              ip: 10.0.11.12
+                            - name: server113
+                              ip: 10.0.11.13                          
+                    - name: tenant2
+                      app_list:
+                        - name: example2A
+                          ip: 10.0.1.204
+                          port: 80
+                          members:
+                            - name: server121
+                              ip: 10.0.1.21
+                            - name: server122
+                              ip: 10.0.1.22
+                            - name: server123
+                              ip: 10.0.1.23
+                        - name: example2B
+                          ip: 10.0.11.204
+                          port: 80
+                          members:
+                            - name: server221
+                              ip: 10.0.11.21
+                            - name: server222
+                              ip: 10.0.11.22
+                            - name: server223
+                              ip: 10.0.11.23
                   state: deployed
           vars:
             # vars for r59001
@@ -170,3 +215,23 @@ all:
       name: gtm1
       hostname: gtm1.f5.com
       sync_self_address: 10.0.2.101
+      wips:
+        tenants: 
+          - name: tenant1
+            apps:
+              - name: nginx
+                wip: nginx.example.com
+                virtuals: 
+                  - name: nginxServicemainA
+                    ltm: arch-ltm1
+                  - name: nginxServicemainB
+                    ltm: arch-ltm1
+          - name: tenant2
+            apps:
+              - name: another
+                wip: another.example.com
+                virtuals:
+                  - name: example2A
+                    ltm: arch-ltm1
+                  - name: example2B
+                    ltm: arch-ltm1
