@@ -7,7 +7,7 @@ This example Ansible playbook deploys the following resources using a series of 
 - On first deployment only, the default password is updated on the deployed tenants.  Future playbook runs ignore this for any tenants that were previously deployed.
 - Installs the ILX packages and checks for correct installation.  Thanks to @simonkowallik for the code.
 - Creates DO declaration from a tenmplate using the inventory.  DO also includes replacement device certificates.
-- - The template also handles creation of LTM HA pairs and LTM standalone devices, based on the inventory.
+  - The template also handles creation of LTM HA pairs and LTM standalone devices, based on the inventory.
 - Builds the GTM sync-group, creates the DC and GTM Server objects and swaps device certificates to allow the trust to form (gtm_add command).
 - Adds LTMs to the GTM sync-group as 'Servers' and and swaps device certificates to allow the trust to form (bigip_add command).
 - Deploys application LTM Virtual Servers based on inventory structure
