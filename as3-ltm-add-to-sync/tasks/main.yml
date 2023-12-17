@@ -30,7 +30,7 @@
     body_format: json
     return_content: true
   delegate_to: localhost
-  when: inventory_hostname in groups["gtm_sync_group_primary"]
+  # when: inventory_hostname in groups["gtm_sync_group_primary"]
   register: as3_deploy
   tags:
     - gtm
@@ -39,7 +39,7 @@
 - name: Debug AS3 GTM/DNS deployment status link (used by the following task)
   debug:
     msg: "{{ as3_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
-  when: inventory_hostname in groups["gtm_sync_group_primary"]
+  # when: inventory_hostname in groups["gtm_sync_group_primary"]
   tags: 
     - debug
 
@@ -58,7 +58,7 @@
   retries: 10
   delay: 10
   delegate_to: localhost
-  when: inventory_hostname in groups["gtm_sync_group_primary"]
+  # when: inventory_hostname in groups["gtm_sync_group_primary"]
   register: as3_result
   until:  as3_result.json.results | selectattr('code', '==', 200) | list | length == as3_result.json.results | length
   tags: 
@@ -68,7 +68,7 @@
 - name: Debug AS3 GTM/DNS deployment status result
   debug:
     msg: "{{ as3_result }}"
-  when: inventory_hostname in groups["gtm_sync_group_primary"]
+  # when: inventory_hostname in groups["gtm_sync_group_primary"]
   tags: 
     - debug
 

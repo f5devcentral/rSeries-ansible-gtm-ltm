@@ -90,7 +90,7 @@
 
 
 - name: Deploy Application Services (DNS/GTM WIP)
-  hosts: gtm_sync_group_primary
+  hosts: gtms
   gather_facts: no
   connection: httpapi
   collections:
