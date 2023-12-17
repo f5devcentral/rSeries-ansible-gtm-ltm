@@ -102,6 +102,7 @@
     - ltm
     - gtm
 
+
 - name: Debug Declarative Onboarding deployment status link (used by the following task)
   debug:
     msg: "{{ do_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
@@ -129,4 +130,3 @@
   tags: 
     - ltm
     - gtm
-

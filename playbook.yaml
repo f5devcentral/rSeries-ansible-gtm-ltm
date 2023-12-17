@@ -19,7 +19,7 @@
   serial: 1
   roles:
     # Create the tenant on rSeries 
-    - role: deploy-tenant
+    - role: deploy-tenants
 
 - name: Install ATC packages
   hosts: gtms:ltms
@@ -32,7 +32,7 @@
   # Use serial to restricy to one device at a time for debug.
   serial: 1
   roles:
-    - role: atc-install
+    - role: atc-package-install
 
 - name: Declarative Onboarding
   hosts: gtms:ltms
@@ -45,7 +45,7 @@
   # Use serial to restricy to one device at a time for debug.
   serial: 1
   roles:
-    - role: declarative-onboarding
+    - role: tenant-declarative-onboarding
 
 
 - name: Configure GTM Sync-Group
@@ -73,3 +73,31 @@
   serial: 1
   roles:
     - role: as3-ltm-add-to-sync
+
+
+- name: Deploy Application Services (LTM VS)
+  hosts: ltms_primary_only
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+    - f5networks.f5_modules
+  any_errors_fatal: true
+  # Use serial to restricy to one device at a time for debug.
+  serial: 1
+  roles:
+    - role: as3-ltm-vs
+
+
+- name: Deploy Application Services (DNS/GTM WIP)
+  hosts: gtm_sync_group_primary
+  gather_facts: no
+  connection: httpapi
+  collections:
+    - f5networks.f5os
+    - f5networks.f5_modules
+  any_errors_fatal: true
+  # Use serial to restricy to one device at a time for debug.
+  serial: 1
+  roles:
+    - role: as3-gtm-wip

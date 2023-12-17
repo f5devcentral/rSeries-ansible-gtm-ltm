@@ -160,10 +160,6 @@ all:
     mem: 7680
     cpu: 2
     vlans: [3209, 3030]
-#     host_admin_pass: admin
-#     host_root_pass: password
-#     tenant_user: cec
-#     tenant_password: tenant_password
     dns_sync_group: arch-sync-group
     dns_server: 8.8.8.8
     ntp_server: time.google.com

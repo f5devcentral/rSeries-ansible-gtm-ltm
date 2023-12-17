@@ -1,0 +1,137 @@
+{
+    "class": "ADC",
+    "schemaVersion": "3.37.0",
+    "id": "GSLB_Sample",
+    "Common": {
+        "class": "Tenant",
+        "Shared": {
+            "class": "Application",
+            "template": "shared",
+            {% for dc in datacenter_list %}"{{ dc }}": {
+                "class": "GSLB_Data_Center"
+            },{% endfor %}
+            {% for server in groups['gtms'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {
+                        "address": "{{ hostvars[server]['internal_self'] | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ hostvars[server]['inventory_hostname_short'] }}"
+                    }
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled"
+            },{% endfor %}
+            {% for server in groups['ltms_primary_only'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {% for peer in hostvars[server]['self_and_peer_info'] %}
+                    {
+                        "address": "{{ peer.iquery_ip | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ peer.name }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled",
+                "virtualServers": [
+                    {% for tenant in hostvars[server]['tenants'] %}{% for app in tenant.app_list %}{
+                        "name": "{{ app.name }}",
+                        "label": "Example label",
+                        "remark": "GSLB server virtual server description",
+                        "enabled": true,
+                        "address": "{{ app.ip }}",
+                        "port": {{ app.port }}
+                    }{% if not loop.last %},
+                    {% endif %}{% endfor %}{% if not loop.last %},
+                    {% endif %}{% endfor %}
+                ]
+            },{% endfor %}
+            {% for server in groups['ltm_standalone_only'] %}"{{ hostvars[server]['inventory_hostname_short'] }}": {
+                "class": "GSLB_Server",
+                "label": "Example of all GSLB server properties",
+                "remark": "GSLB server description",
+                "devices": [
+                    {% for peer in hostvars[server]['self_and_peer_info'] %}
+                    {
+                        "address": "{{ peer.iquery_ip | ansible.utils.ipaddr('address') }}",
+                        "remark": "{{ peer.name }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                "dataCenter": {
+                    "use": "{{ hostvars[server]['dc'] }}"
+                },
+                "serverType": "bigip",
+                "enabled": true,
+                "serviceCheckProbeEnabled": false,
+                "pathProbeEnabled": false,
+                "snmpProbeEnabled": false,
+                "virtualServerDiscoveryMode": "enabled",
+                "virtualServers": [
+                    {% for tenant in hostvars[server]['tenants'] %}{% for app in tenant.app_list %}{
+                        "name": "{{ app.name }}",
+                        "label": "Example label",
+                        "remark": "GSLB server virtual server description",
+                        "enabled": true,
+                        "address": "{{ app.ip }}",
+                        "port": {{ app.port }}
+                    }{% if not loop.last %},
+                    {% endif %}{% endfor %}{% if not loop.last %},
+                    {% endif %}{% endfor %}
+                ]
+            },{% endfor %}
+        }
+    },
+    {% for tenant in gtm_server_primary.wips.tenants %}"{{ tenant.name}}": {
+        "class": "Tenant",
+        {% for app in tenant.apps %}"{{ app.name }}": {
+            "class": "Application",
+            "template": "generic",
+            "{{ app.name }}domain": {
+                "class": "GSLB_Domain",
+                "domainName": "{{ app.wip }}",
+                "resourceRecordType": "A",
+                "poolLbMode": "ratio",
+                "pools": [
+                    { "use": "{{ app.name }}Pool" }
+                ]
+            },
+            "{{ app.name }}Pool": {
+               "class": "GSLB_Pool",
+                "enabled": true,
+                "lbModeAlternate": "ratio",
+                "lbModeFallback": "ratio",
+                "members": [
+                    {% for virtual in app.virtuals %}
+                    {
+                        "ratio": 10,
+                        "server": {
+                            "use": "/Common/Shared/{{ virtual.ltm }}"
+                        },
+                        "virtualServer": "{{ virtual.name }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                "resourceRecordType": "A"
+            }
+        }{% if not loop.last %},{% endif %}{% endfor %}
+    }{% if not loop.last %},{% endif %}{% endfor %}
+}
