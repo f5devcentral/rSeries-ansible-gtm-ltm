@@ -23,7 +23,7 @@ To run playbook, first create `inventory` file, based on the structure shown in 
 
 The inventoy structure is important, becasue GTMs and LTMs have different architectures and requirements and these requirements change throughout the course of the playbook as the deployment configuration is built.
 
-As an example, for a GTM deployment, initially, the ansible_host is the rSeries F5OS hypervisor, but then it changes to the GTM management IP.  
+As an example, for a GTM deployment, initially, the ansible_host is the rSeries F5OS hypervisor, but then it changes to the GTM management IP.  LTMs are initally single devices, but after DO, we optionsllay need to refer to them in pairs.
 
 ## Creating device certificates 
 
