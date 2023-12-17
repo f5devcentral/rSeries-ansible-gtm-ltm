@@ -2,8 +2,8 @@
 
 datacenters:
   children:
-    slo_dc:
-    glo_dc:
+    datacenter1:
+    datacenter2:
 
 gtms:
   children:
@@ -36,7 +36,7 @@ ltms_secondary_only:
 
 all:
   children:
-    slo_dc:
+    datacenter1:
       children:
         r59001:
           children:
@@ -46,7 +46,6 @@ all:
                   ansible_host: 10.0.107.56
                   external_self: 10.0.1.101/24
                   internal_self: 10.0.2.101/24
-                  # sync_self_address: 10.0.2.101
                   device_cert: gtm-cert-1.crt
                   device_key: gtm-cert-1.key
                   gtm_sync_group_primary: true
@@ -123,9 +122,9 @@ all:
             route_cidr: 10.0.0.0/16
             gateway: 10.0.2.1
       vars:
-        # vars for slo_dc
-        dc: slo_dc
-    glo_dc:
+        # vars for datacenter1
+        dc: datacenter1
+    datacenter2:
       children:
         r59002:
           children:
@@ -181,8 +180,8 @@ all:
             route_cidr: 10.0.0.0/16
             gateway: 10.0.2.1
       vars:
-        # vars for glo_dc
-        dc: glo_dc
+        # vars for datacenter2
+        dc: datacenter2
   vars:
     # vars for all hosts
     ansible_user: admin
@@ -209,8 +208,8 @@ all:
     dns_server: 8.8.8.8
     ntp_server: time.google.com
     datacenter_list: 
-      - slo_dc
-      - glo_dc
+      - datacenter1
+      - datacenter2
     gtm_server_primary:
       name: gtm1
       hostname: gtm1.f5.com
