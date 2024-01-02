@@ -85,6 +85,7 @@
     return_content: true
   delegate_to: localhost
   register: gtm_add_response
+  # IMPORTANT: Line below ensures that this command does NOT run on primary GTM.
   when: not gtm_sync_group_primary
   tags:
     - gtm  
