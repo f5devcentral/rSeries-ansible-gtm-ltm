@@ -23,9 +23,13 @@ To run playbook, first create `inventory` file, based on the structure shown in 
 
 Ansible best practice (https://docs.ansible.com/ansible/2.8/user_guide/playbooks_best_practices.html) suggests using a folder structure for vars, but in this example I have added all variables to the inventory file, which makes it easier to understand the structre at first glance.  
 
-The inventoy structure is important, becasue GTMs and LTMs have different architectures and requirements and these requirements change throughout the course of the playbook as the deployment configuration is built.
+The inventoy structure is important, becasue GTMs and LTMs have different deployment architectures and requirements and these requirements change during the course of the playbook as the deployment configuration advances.
+
+> **_NOTE:_**  Add important note about gtm_add
 
 As an example, for a GTM deployment, initially, the ansible_host is the rSeries F5OS hypervisor, but then it changes to the GTM management IP.  LTMs are initally single devices, but after DO, we optionsllay need to refer to them in pairs.  We also need a structure for the application deployments of Virtual Servers (`tenants` variable nested inside the HA primary or stand-alone LTM hosts) and WIPs (`wips` nested inside the `gtm_server_primary` variable).
+
+
 
 
 ## Creating device certificates 
