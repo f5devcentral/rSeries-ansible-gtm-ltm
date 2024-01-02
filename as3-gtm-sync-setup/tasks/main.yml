@@ -57,7 +57,6 @@
   delay: 10
   delegate_to: localhost
   register: as3_result
-  # 
   until:  as3_result.json.results | selectattr('code', '==', 200) | list | length == as3_result.json.results | length
   tags: 
     - gtm
