@@ -25,7 +25,7 @@ Ansible best practice (https://docs.ansible.com/ansible/2.8/user_guide/playbooks
 
 The inventoy structure is important, becasue GTMs and LTMs have different deployment architectures and requirements and these requirements change during the course of the playbook as the deployment configuration advances.
 
-> **_NOTE:_**  You MUST define the GTM sync-group primary device in two locations within the inventory.  Firstly, set `gtm_sync_group_primary: true` variable within the chosen gtm host configuration (this is set to `gtm1.f5.com` in the example inventory).  Secondly, add the hostname of the chosen gtm within the `gtm_sync_group_primary` group (this is set to the host `gtm1.f5.com` in the example inventory)
+> **_IMPORTANT:_**  You MUST define the GTM sync-group primary device in two locations within the inventory.  Firstly, set `gtm_sync_group_primary: true` variable within the chosen gtm host configuration (this is set to `gtm1.f5.com` in the example inventory).  Secondly, add the hostname of the chosen gtm within the `gtm_sync_group_primary` group (this is set to the host `gtm1.f5.com` in the example inventory)
 
 As an example, for a GTM deployment, initially, the ansible_host is the rSeries F5OS hypervisor, but then it changes to the GTM management IP.  LTMs are initally single devices, but after DO, we optionsllay need to refer to them in pairs.  
 
