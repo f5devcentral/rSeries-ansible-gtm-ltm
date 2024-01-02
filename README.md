@@ -27,7 +27,11 @@ The inventoy structure is important, becasue GTMs and LTMs have different deploy
 
 > **_NOTE:_**  Add important note about gtm_add
 
-As an example, for a GTM deployment, initially, the ansible_host is the rSeries F5OS hypervisor, but then it changes to the GTM management IP.  LTMs are initally single devices, but after DO, we optionsllay need to refer to them in pairs.  We also need a structure for the application deployments of Virtual Servers (`tenants` variable nested inside the HA primary or stand-alone LTM hosts) and WIPs (`wips` nested inside the `gtm_server_primary` variable).
+> **_NOTE:_**  You MUST define the GTM sync-group primary device in two locations within the inventory.  Firstly, set `gtm_sync_group_primary: true` variable within the chosen gtm host configuration (this is set to `gtm1.f5.com` in the example inventory).  Secondly, add the hostname of the chosen gtm within the `gtm_sync_group_primary` group (this is set to the host `gtm1.f5.com` in the example inventory)
+
+As an example, for a GTM deployment, initially, the ansible_host is the rSeries F5OS hypervisor, but then it changes to the GTM management IP.  LTMs are initally single devices, but after DO, we optionsllay need to refer to them in pairs.  
+
+We also need a structure for the application deployments of Virtual Servers (`tenants` variable nested inside the HA primary or stand-alone LTM hosts) and WIPs (`wips` nested inside the gtm host object that has been set as primary with `gtm_sync_group_primary: true` variable).
 
 
 

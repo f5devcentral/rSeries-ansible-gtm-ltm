@@ -35,14 +35,14 @@
     - ltm
 
 
-- name: Debug AS3 GTM/DNS deployment status link (used by the following task)
+- name: Debug AS3 LTM deployment status link (used by the following task)
   debug:
     msg: "{{ as3_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
   tags: 
     - debug
 
 
-- name: AS3 GTM/DNS deployment status (max 1200)
+- name: AS3 LTM deployment status (max 1200)
   uri:
     url: "{{ as3_deploy.json.selfLink | replace ('localhost',ansible_host) }}"
     method: GET
@@ -62,7 +62,7 @@
     - gtm
 
 
-- name: Debug AS3 GTM/DNS deployment status result
+- name: Debug AS3 LTM deployment status result
   debug:
     msg: "{{ as3_result }}"
   tags: 

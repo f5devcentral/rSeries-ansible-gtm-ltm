@@ -100,7 +100,7 @@
             },{% endfor %}
         }
     },
-    {% for tenant in gtm_server_primary.wips.tenants %}"{{ tenant.name}}": {
+    {% for tenant in hostvars[groups['gtm_sync_group_primary'][0]]['wips']['tenants'] %}"{{ tenant.name}}": {
         "class": "Tenant",
         {% for app in tenant.apps %}"{{ app.name }}": {
             "class": "Application",
