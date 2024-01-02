@@ -3,7 +3,7 @@
 			"options": [
         {
             "ssh-password": "{{ ansible_httpapi_password }}",
-            "{{ ansible_user }}@{{ gtm_server_primary.sync_self_address }}": ""
+            "{{ ansible_user }}@{{ hostvars[groups['gtm_sync_group_primary'][0]]['internal_self'] | ansible.utils.ipaddr('address') }}": ""
         }
     ]
 }
