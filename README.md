@@ -56,8 +56,9 @@ openssl req -out ./${shortname}/${shortname}.csr -newkey rsa:2048 -nodes -keyout
 ### Create san.conf file
 Create a san.conf file using the following structure, replaceing the example values with your own:
 
+`
   [ req ]
-  default_bits       = 2048`
+  default_bits       = 2048
   distinguished_name = req_distinguished_name
   req_extensions     = req_ext
   [ req_distinguished_name ]
@@ -67,7 +68,8 @@ Create a san.conf file using the following structure, replaceing the example val
   organizationName           = F5
   commonName                 = f5-1.f5demo.net
   [ req_ext ]
-  extendedKeyUsage = clientAuth, serverAuth`
+  extendedKeyUsage = clientAuth, serverAuth
+`
 
 The following command references the san.conf you create.
 
